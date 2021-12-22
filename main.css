@@ -30,6 +30,7 @@ body {
   text-align: center;
   border-radius: 15px;
 }
+.openGuide,
 .restartBtn {
   background-color: white;
   margin-bottom: 20px;
@@ -37,7 +38,52 @@ body {
   border-radius: 10px;
   padding: 10px;
   width: 300px;
+  border: none;
+  cursor: pointer;
+}
+.openGuide {
+  background-color: aquamarine;
 }
 #final-result {
   color: rgb(97, 0, 0);
+}
+#waves {
+  position: absolute;
+  top: 1%;
+  right: 1%;
+}
+.wave {
+  width: 30px;
+  padding: 1px;
+}
+#guide {
+  position: absolute;
+  box-sizing: border-box;
+  padding: 20px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  /* display: flex; */
+  flex-direction: column;
+  background-color: white;
+  border-radius: 10px;
+  width: 600px;
+  height: 400px;
+}
+#controlers-pic {
+  /* position: absolute; */
+  position: relative;
+  left: 100px;
+  top: 100px;
+}
+#ok {
+  position: absolute;
+  background-color: aquamarine;
+  bottom: 1%;
+  right: 1%;
+  width: 90px;
+  height: 30px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
 }
