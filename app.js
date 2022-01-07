@@ -338,7 +338,7 @@ function spawnEnemies() {
     //   y: Math.sin(angel) * r,
     // };
     enemies.push(new Enemy(x, y, 40, color));
-  }, 10000);
+  }, 2500);
 }
 
 // Functiont to spawn enemy
@@ -364,7 +364,7 @@ function spawnfloatingEnemies() {
       y: (Math.random() - 0.5) * 2 * r,
     };
     floatingEnemies.push(new FloatingEnemy(x, y, velocity));
-  }, 3000);
+  }, 5000);
 }
 
 // Function for animation
