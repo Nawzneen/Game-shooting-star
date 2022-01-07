@@ -1,7 +1,8 @@
 const canvas = document.querySelector("canvas");
-canvas.width = innerWidth;
-canvas.height = innerHeight;
+
 const c = canvas.getContext("2d");
+c.canvas.width = window.innerWidth;
+c.canvas.height = window.innerHeight;
 const scoreEl = document.querySelector(".score");
 const popUp = document.querySelector("#popup");
 const restartBtn = document.querySelector(".restartBtn");
@@ -13,6 +14,9 @@ const three = document.querySelector("#three");
 const finalResult = document.querySelector("#final-result");
 const openGuide = document.querySelector(".openGuide");
 const guide = document.querySelector("#guide");
+var gameIsRunning = false;
+var shotSound = new Audio("./sounds/mixkit-short-laser-gun-shot-1670.flac");
+var waveSound = new Audio("./sounds/mixkit-small-hit-in-a-game-2072.flac");
 
 // Building classes
 class Player {
@@ -31,22 +35,21 @@ class Player {
   }
   update() {
     this.draw();
-    this.up();
+    this.movements();
+    this.boost();
   }
-  up() {
+  movements() {
     if (
       (keys["w"] && this.y - this.radius > 0) ||
       (keys["W"] && this.y - this.radius > 0)
     ) {
       this.y--;
-      // this.draw();
     }
     if (
       (keys["s"] && this.y + this.radius < canvas.height) ||
       (keys["S"] && this.y + this.radius < canvas.height)
     ) {
       this.y++;
-      // this.draw();
     }
 
     if (
@@ -54,14 +57,39 @@ class Player {
       (keys["A"] && this.x - this.radius > 0)
     ) {
       this.x--;
-      // this.draw();
     }
     if (
       (keys["d"] && this.x + this.radius < canvas.width) ||
       (keys["D"] && this.x + this.radius < canvas.width)
     ) {
       this.x++;
-      // this.draw();
+    }
+  }
+  boost() {
+    if (
+      (keys[" "] && this.y - this.radius && keys["w"] > 0) ||
+      (keys[" "] && keys["W"] && this.y - this.radius > 0)
+    ) {
+      this.y = this.y - 2;
+    }
+    if (
+      (keys[" "] && keys["s"] && this.y + this.radius < canvas.height) ||
+      (keys[" "] && keys["S"] && this.y + this.radius < canvas.height)
+    ) {
+      this.y = this.y + 2;
+    }
+
+    if (
+      (keys[" "] && keys["a"] && this.x - this.radius > 0) ||
+      (keys[" "] && keys["A"] && this.x - this.radius > 0)
+    ) {
+      this.x = this.x - 2;
+    }
+    if (
+      (keys[" "] && keys["d"] && this.x + this.radius < canvas.width) ||
+      (keys[" "] && keys["D"] && this.x + this.radius < canvas.width)
+    ) {
+      this.x = this.x + 2;
     }
   }
 }
@@ -136,6 +164,59 @@ class Enemy {
     this.y = this.y + this.velocity.y;
   }
 }
+
+// second enemy floating in the air
+class FloatingEnemy {
+  constructor(x, y, velocity) {
+    this.image = new Image();
+    this.image.src = "../images/star1.png";
+    this.x = x;
+    this.y = y;
+    this.velocity = velocity;
+    this.height = 50;
+    this.width = 50;
+    this.radius = this.width / 2;
+    // this.color = color;
+    // this.velocity = velocity;
+  }
+  draw() {
+    // bellow to see the hit point
+    // c.beginPath();
+    // c.arc(
+    //   this.x + this.radius,
+    //   this.y + this.radius,
+    //   this.radius,
+    //   0,
+    //   Math.PI * 2,
+    //   false
+    // );
+    // c.fillStyle = this.color;
+    // c.fill();
+    c.drawImage(
+      this.image,
+      0,
+      0,
+      150,
+      150,
+      this.x,
+      this.y,
+      this.width,
+      this.height
+    );
+  }
+  update() {
+    this.draw();
+    // RANDOMELY MOVES
+    // this.angel = Math.atan2(player.y - this.y, player.x - this.x);
+    // this.r = Math.random() * 2;
+    // this.velocity = {
+    //   x: Math.random() * this.r,
+    //   y: Math.random() * this.r,
+    // };
+    this.x = this.x + this.velocity.x;
+    this.y = this.y + this.velocity.y;
+  }
+}
 const friction = 0.99;
 
 class Particle {
@@ -205,6 +286,8 @@ class Wave {
 // // Array of projectiles
 let projectiles = [];
 let enemies = [];
+let floatingEnemies = [];
+
 let particles = [];
 let waves = [];
 let waveNum = 3;
@@ -217,12 +300,16 @@ function init() {
   // Array of projectiles
   projectiles = [];
   enemies = [];
+  floatingEnemies = [];
   particles = [];
   waves = [];
   waveNum = 3;
   result = 0;
   scoreEl.innerHTML = result;
   finalResult.innerHTML = result;
+  // one.add();
+  // two.add();
+  // three.add();
 }
 // Functiont to spawn enemy
 function spawnEnemies() {
@@ -251,15 +338,44 @@ function spawnEnemies() {
     //   y: Math.sin(angel) * r,
     // };
     enemies.push(new Enemy(x, y, 40, color));
+  }, 10000);
+}
+
+// Functiont to spawn enemy
+function spawnfloatingEnemies() {
+  setInterval(() => {
+    // radius = Math.random() * (30 - 5) + 5;
+    let x = Math.random() * canvas.width;
+    let y = Math.random() * canvas.height;
+    // bellow code is for respawn from outside of canvas
+    // if (Math.random() < 0.5) {
+    //   x = Math.random() < 0.5 ? 0 - radius : canvas.width + radius;
+    //   y = Math.random() * canvas.height;
+    // } else {
+    //   x = Math.random() * canvas.width;
+    //   y = Math.random() < 0.5 ? 0 - radius : canvas.height + radius;
+    // }
+
+    // enemies first moving to the initial position of the player
+    // const angel = Math.atan2(player.y - y, player.x - x);
+    const r = Math.random() * 2;
+    const velocity = {
+      x: (Math.random() - 0.5) * 2 * r,
+      y: (Math.random() - 0.5) * 2 * r,
+    };
+    floatingEnemies.push(new FloatingEnemy(x, y, velocity));
   }, 3000);
 }
+
 // Function for animation
 let animationID;
 let result = 0;
 function animate() {
   animationID = requestAnimationFrame(animate);
-  c.fillStyle = "rgba(0, 0, 0, 0.1)";
+  c.fillStyle = "rgba(0, 0, 0, 0.2)";
   c.fillRect(0, 0, canvas.width, canvas.height);
+  gameIsRunning = true;
+
   player.update();
   // wave.update();
 
@@ -292,6 +408,22 @@ function animate() {
         projectiles.splice(index, 1);
       }, 0);
     }
+    floatingEnemies.forEach((floatingEnemy, index, array) => {
+      const dist1 = Math.hypot(
+        projectile.x - floatingEnemy.x - floatingEnemy.radius,
+        projectile.y - floatingEnemy.y - floatingEnemy.radius
+      );
+      if (dist1 - floatingEnemy.radius - projectile.radius < 0) {
+        projectiles.splice(index, 1);
+        //   array.push(
+        //     new FloatingEnemy(aaaaaaa
+        //       floatingEnemy.y + 10,
+        //       floatingEnemy.velocity * -1
+        //     )
+        //   );
+        console.log(floatingEnemies.length);
+      }
+    });
   });
   enemies.forEach((enemy, index) => {
     enemy.update();
@@ -299,6 +431,8 @@ function animate() {
 
     // end game
     if (dist - enemy.radius - player.radius < 1) {
+      // game is over
+      gameIsRunning = false;
       cancelAnimationFrame(animationID);
       popUp.style.display = "flex";
       finalResult.innerHTML = result;
@@ -341,15 +475,39 @@ function animate() {
         }
       }
     });
+
     // enemy and wave hits
     // waves.forEach((wave, index) => {
     //   const distEnemyWave = Math.hypot(wave.x - enemy.x, wave.y - enemy.y);
-    //   console.log(distEnemyWave);
     //   if (distEnemyWave - wave.radius - enemy.radius < 0) {
     //     wave.splice(index, 1);
     //     enemies.splice(index, 1);
     //   }
     // });
+  });
+  floatingEnemies.forEach((floatingEnemy, index) => {
+    floatingEnemy.update();
+    if (
+      floatingEnemy.x + floatingEnemy.radius < 0 ||
+      floatingEnemy.x - floatingEnemy.radius > canvas.width ||
+      floatingEnemy.y + floatingEnemy.radius < 0 ||
+      floatingEnemy.y - floatingEnemy.radius > canvas.height
+    ) {
+      floatingEnemies.splice(index, 1);
+
+      // setTimeout(() => {}, 0);
+    }
+    const dist = Math.hypot(
+      player.x - floatingEnemy.x - floatingEnemy.radius,
+      player.y - floatingEnemy.y - floatingEnemy.radius
+    );
+    if (dist - floatingEnemy.radius - player.radius < 1) {
+      // game is over
+      gameIsRunning = false;
+      cancelAnimationFrame(animationID);
+      popUp.style.display = "flex";
+      finalResult.innerHTML = result;
+    }
   });
 }
 
@@ -364,14 +522,16 @@ addEventListener("click", (event) => {
   const Y0 = event.clientY;
 
   projectiles.push(new Projectile(player.x, player.y, X0, Y0, 5, "red"));
+  shotSound.play();
 });
 
 addEventListener("keydown", (e) => {
-  if (e.code === "Space") {
+  if (e.code === "KeyQ") {
     // let wave = ;
     // waves.push(wave);
     // wave.update();
     if (waveNum > 0) {
+      waveSound.play();
       if (waveNum === 3) {
         three.remove();
       }
@@ -384,7 +544,7 @@ addEventListener("keydown", (e) => {
       waveNum--;
       waves.push(new Wave(player.x, player.y, 50, "white", 20));
       enemies.splice(0, enemies.length);
-      console.log(waveNum);
+      floatingEnemies.splice(0, floatingEnemies.length);
     }
   }
 });
@@ -413,11 +573,13 @@ addEventListener("keyup", function (e) {
 
 restartBtn.addEventListener("click", () => {
   // refreshPage();
-  // window.location.reload();
-
+  // window.location.reload();s
+  gameIsRunning = true;
   init();
   animate();
   spawnEnemies();
+  spawnfloatingEnemies();
+
   popUp.style.display = "none ";
 });
 function refreshPage() {

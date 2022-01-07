@@ -3,11 +3,17 @@ body {
   margin: 0;
   position: relative;
   background-color: black;
+  user-select: none;
+  max-width: 100%;
+  overflow: hidden;
+  /* display: block; */
 }
-/* canvas {
-  width: 100vw;
-  height: 100vh;
-} */
+canvas {
+  cursor: url("images/cursor.png"), auto;
+}
+canvas:active {
+  cursor: url("images/cursor2.png"), auto;
+}
 #scoremenu {
   position: absolute;
   top: 0;
